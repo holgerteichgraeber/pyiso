@@ -5,6 +5,13 @@ pyiso
 [![Coverage Status](https://coveralls.io/repos/WattTime/pyiso/badge.svg?branch=master)](https://coveralls.io/r/WattTime/pyiso?branch=master)
 [![PyPI version](https://badge.fury.io/py/pyiso.svg)](https://badge.fury.io/py/pyiso)
 
+Note on this branch
+-------------------
+This branch is a modified version of the pyiso package, in order to pull price data from CAISO (and possibly other price data). It is reversed to commit 3786e1c and includes minor modifications.
+
+Original Doc
+-----------
+
 pyiso provides Python client libraries for [ISO](https://www.epsa.org/industry/primer/?fa=rto) and other power grid data sources.
 It powers the WattTime API (https://api.watttime.org/), among other things.
 
