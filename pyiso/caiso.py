@@ -272,7 +272,7 @@ class CAISOClient(BaseClient):
         self.handle_options(data='lmp', latest=latest,
                             start_at=start_at, end_at=end_at,
                             **kwargs)
-        self.timeout_seconds = 45
+        #self.timeout_seconds = 45 # take over timeout from Baseclient
 
         if self.options['latest']:
             queryname = 'PRC_CURR_LMP'
@@ -696,7 +696,7 @@ class CAISOClient(BaseClient):
         # return
         return parsed_data
 
-    def todays_outlook_time(self, demand_soup):       
+    def todays_outlook_time(self, demand_soup):
         for ts_soup in demand_soup.find_all(class_='docdate'):
             if str(ts_soup) is None:
                 continue
