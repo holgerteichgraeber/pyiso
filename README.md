@@ -7,7 +7,12 @@ pyiso
 
 Note on this branch
 -------------------
-This branch is a modified version of the pyiso package, in order to pull price data from CAISO (and possibly other price data). It is reversed to commit 3786e1c and includes minor modifications.
+This branch is a modified version of the pyiso package, in order to pull price data from CAISO (and possibly other price data). It is reversed to commit 3786e1c and includes minor modifications. 
+
+Installation of this branch
+---------------------------
+Checkout this branch, then run:
+python setup.py install 
 
 Original Doc
 -----------
