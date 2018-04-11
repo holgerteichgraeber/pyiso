@@ -41,6 +41,7 @@ class CAISOClient(BaseClient):
         'NUCLEAR': 'nuclear',
         'THERMAL': 'thermal',
         'HYDRO': 'hydro',
+        'IMPORTS': 'imports',
     }
 
     oasis_markets = {  # {'RT5M': 'RTM', 'DAHR': 'DAM', 'RTHR': 'HASP'}
@@ -79,6 +80,8 @@ class CAISOClient(BaseClient):
         # set args
         self.handle_options(data='gen', latest=latest, yesterday=yesterday,
                             start_at=start_at, end_at=end_at, **kwargs)
+
+        # print(self.options)
 
         if self.options['latest']:
             return self._generation_latest()
@@ -202,7 +205,7 @@ class CAISOClient(BaseClient):
     def _generation_historical(self):
         # set up storage
         parsed_data = []
-
+        print("Starting Jac generation historical")
         # collect data
         request_date = self.options['start_at'].astimezone(self.ca_tz).date()
         local_end_at = self.options['end_at'].astimezone(self.ca_tz).date()
@@ -216,6 +219,7 @@ class CAISOClient(BaseClient):
             if not response:
                 request_date += timedelta(days=1)
                 continue
+            # print(response.text)
 
             dst_error_text = 'The supplied DateTime represents an invalid time.  For example, when the clock is ' \
                              'adjusted forward, any time in the period that is skipped is invalid.'
@@ -229,16 +233,33 @@ class CAISOClient(BaseClient):
 
                 df = self.parse_to_df(response.text, nrows=num_data_rows, header=header_idx, delimiter='\t+')
 
+                # HACK - JAC 20180319
+                # convert df to numeric and drop NA rows. Can then take away both
+                # the #VALUE and the try/catch block just below
+                df = df.apply(pd.to_numeric, errors='coerce')
+
+
+                # After 2014, DST jumps have text in the missing row
+                df.dropna(inplace=True)
+                # For 2014-2013, DST jumps have zeros in the missing row
+                cols = [col for col in df.columns if col !='Hour']
+
+                if df.loc[1,cols].sum() == 0:
+                    print("Treating DST before 2014")
+                    df.loc[df.Hour==2,cols] = df.loc[df.Hour==3,cols].values
+                    df = df[df.Hour!=3]
+
                 # The day transitioning to daylight saving time has errors in part two of the file that need removal.
-                if part == 2:
-                    df = df[df.THERMAL.map(str) != '#VALUE!']
+                # if part == 2:
+                #     df = df[df.THERMAL.map(str) != '#VALUE!']
 
                 # combine date with hours to index
-                try:
-                    indexed = self.set_dt_index(df, request_date, df['Hour'])
-                except Exception as e:
-                    LOGGER.error(e)
-                    continue
+                # try:
+                indexed = self.set_dt_index(df, request_date, df['Hour'])
+                # except Exception as e:
+                #     print("bla")
+                #     LOGGER.error(e)
+                #     continue
 
                 # original header is fuel names
                 indexed.rename(columns=self.fuels, inplace=True)
@@ -454,7 +475,7 @@ class CAISOClient(BaseClient):
         # return
         return parsed_data
 
-    def todays_outlook_time(self, demand_soup):       
+    def todays_outlook_time(self, demand_soup):
         for ts_soup in demand_soup.find_all(class_='docdate'):
             if str(ts_soup) is None:
                 continue
